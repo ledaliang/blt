@@ -1,0 +1,18 @@
+Package: blt
+Type: Package
+Title: Bayesian Lineage Tracing (BLT)
+Version: 0.1.0
+Author: Leda Liang, Mackenzie Simper, Julia Palacios
+Maintainer: Leda Liang <ledal@stanford.edu>
+Description: More about what it does (maybe more than one line)
+    Use four spaces when indenting paragraphs within the Description.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+Suggests:
+    INLA,
+    knitr,
+    rmarkdown
+Imports:
+    hash,
+    expm
