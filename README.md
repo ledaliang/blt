@@ -31,5 +31,7 @@ Datasets below can be found at:
 ## Contributors
 
 Leda Liang
+
 Mackenzie Simper
+
 Julia Palacios
