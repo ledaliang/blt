@@ -16,3 +16,4 @@ Suggests:
 Imports:
     hash,
     expm
+RoxygenNote: 7.3.1

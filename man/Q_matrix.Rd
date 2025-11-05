@@ -12,10 +12,50 @@ Q_matrix(states, theta)
 \item{(theta)}{An SxS matrix of cut rates}
 }
 \value{
-A nxn generator matarix
+A nxn generator matrix
 }
 \description{
 Q is the generator matrix for a continuous time Markov chain over the list
 of states. Theta is an SxS matrix with theta[i, j] is the rate of a cut from
 site i to site j. Theta[i, i] is the rate of a single cut at site i.
+}
+\examples{
+states <- state_space_matrix(3)
+#       [,1] [,2] [,3]
+#  [1,]    1    1    1
+#  [2,]    0    1    1
+#  [3,]    2    2    1
+#  [4,]    1    0    1
+#  [5,]    0    0    1
+#  [6,]    1    3    3
+#  [7,]    0    3    3
+#  [8,]    2    2    2
+#  [9,]    1    1    0
+# [10,]    0    1    0
+# [11,]    2    2    0
+# [12,]    1    0    0
+# [13,]    0    0    0
+
+theta
+#      [,1] [,2] [,3]
+# [1,]    1    1    1
+# [2,]    1    1    1
+# [3,]    1    1    1
+
+Q_matrix(states, theta)
+#       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13]
+#  [1,]    0    0    0    0    0    0    0    0    0     0     0     0     0
+#  [2,]    1   -1    0    0    0    0    0    0    0     0     0     0     0
+#  [3,]    0    0    0    0    0    0    0    0    0     0     0     0     0
+#  [4,]    1    0    0   -1    0    0    0    0    0     0     0     0     0
+#  [5,]    0    1    1    1   -3    0    0    0    0     0     0     0     0
+#  [6,]    0    0    0    0    0    0    0    0    0     0     0     0     0
+#  [7,]    0    0    0    0    0    1   -1    0    0     0     0     0     0
+#  [8,]    0    0    0    0    0    0    0    0    0     0     0     0     0
+#  [9,]    1    0    0    0    0    0    0    0   -1     0     0     0     0
+# [10,]    0    1    0    0    0    0    0    1    1    -3     0     0     0
+# [11,]    0    0    1    0    0    0    0    0    0     0    -1     0     0
+# [12,]    0    0    0    1    0    1    0    0    1     0     0    -3     0
+# [13,]    0    0    0    0    1    0    1    1    0     1     1     1    -6
+
 }
