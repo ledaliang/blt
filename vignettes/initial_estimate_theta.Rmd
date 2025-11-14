@@ -1,0 +1,166 @@
+---
+title: "Initial Estimate of Theta"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{initial_estimate_theta}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+First load the packages needed. `phylodyn` contains functions to simulate tree topologies (can be installed using these instructions (GitHub)[https://github.com/JuliaPalacios/phylodyn/tree/master]. `blt` contains functions that will simulate the states of each node and help estimate mutation rates.
+
+```{r setup}
+library(blt)
+library("phylodyn")
+library(ape)
+```
+
+Simulate the tree topology. For these simulations, we will use a fixed tree topology and simulate multiple datasets on it.
+
+```{r}
+set.seed(123)
+n = 5 # number tips or cells
+S = 3 # number of cut sites
+numSim = 50 # number of simulations
+
+# the tree is fixed, we are simulating multiple realizations
+simul1 <- coalsim(samp_times = 0, n_sampled = n, traj = exp_traj,method="tt",val_upper=11)
+mytree <- generate_newick((simul1))$newick
+summary <- coalescent.intervals(mytree)
+treelength <- sum(summary$lineages*summary$interval.length)
+```
+
+Simulate data at each node given the tree topology `mytree`.
+
+```{r}
+states = state_space(S)
+states_matrix = states_matrix = state_space_matrix(S)
+theta = matrix(c(1, .5, .5,
+                  0,  1, .5,
+                  0,  0,  1), nrow=3, byrow=TRUE)
+Q = Q_matrix(states_matrix, theta)
+
+datalist <- list()
+Dlist <- list()
+for (i in 1:numSim){
+  ## simulates and returns two matrices. 1 mutation states, 2 allele states
+  M = matrix(20, nrow = S, ncol = S)
+  datalist[[i]]= simulate_data_finite_alleles(mytree, Q, states_matrix, M) 
+  D = datalist[[i]][[2]][1:n,]
+  Dlist[[i]] = D
+}
+```
+
+Method 1 uses the method of moments.
+
+```{r}
+t <- coalescent.intervals(mytree)$total.depth
+mom_theta_vec_list <- matrix(0, nrow = numSim, ncol = S*(S+1)/2) # store theta estimates from MoM
+for (i in 1:numSim) {
+  lumpedD = datalist[[i]][[1]][1:n,]
+  A = observed_mutations2(D, S, lumpedD)
+  B <- A$obsM/n
+  
+  # Initial value of theta for optimization
+  theta0<-rep(1,(S*(S+1))*.5)
+  theta0 = theta0*0.03
+
+  # probs_function computes the sum of (observed - expected)^2 for each mutation type
+  est_theta1 = optim(theta0, fn = probs_function,  observedMuts = B, t = t, S = S,
+                     states = states, states_matrix = states_matrix, lower = rep(0, length(theta0)), method = "L-BFGS-B")
+
+  theta_vec <- est_theta1$par
+  mom_theta_vec_list[i,] <- theta_vec
+}
+
+# Scale theta to sum to 1 for each simulation
+scaled_mom_theta_vec_list <- matrix(0, nrow = numSim, ncol = S*(S+1)/2)
+rates_list <- c()
+for (i in 1:numSim) {
+  rates_list[i] <- sum(mom_theta_vec_list[i,])
+  scaled_mom_theta_vec_list[i,] <- mom_theta_vec_list[i,]/rates_list[i]
+}
+boxplot(scaled_mom_theta_vec_list, outline=FALSE) 
+```
+Method 2 uses the posterior mean of the following model
+$$
+\begin{align*}
+\theta &\sim \text{Dirichlet}(\alpha) \\
+\lambda &\sim \text{Exp}(\beta) \\
+C_i | \theta_i &\sim \text{Poisson}(\lambda t \theta_i) \\
+\end{align*}
+$$
+$\theta$ is the vector of relative mutation rates, $\lambda$ is the overall mutation rate, $C_i$ is the observed number of mutations of type $i$, and $t$ is the total tree length.
+
+```{r}
+## save results for posterior mean method
+d_theta <- S*(S+1)/2 # dimension of theta
+alpha <- rep(1, d_theta) # prior parameters
+beta <- 1 # prior parameter for lambda
+post_mean_theta_vec_list <- matrix(0, nrow = numSim, ncol=d_theta)  
+post_mean_lambda_vec_list <- c()
+
+# Methods 2 and 3 require upgma tree estimation, and the package causes conflicts with optim, so it is run separately.
+library("phangorn") ## to avoid problems with hash (required by state_space fn): detach("package:phangorn", unload = TRUE)
+for (i in 1:numSim){
+  D = datalist[[i]][[2]][1:n,]
+  lumpedD = datalist[[i]][[1]][1:n,]
+  A = observed_mutations2(D, S, lumpedD)
+  
+  # Posterior distribution depends on the total length of branches
+  # need to estimate UPGMA tree first
+  # UPGMA tree estimation depends on the data, so must be inside the loop, after new data is simulated
+  mytree_dist_matrix <- hamming_dist_matrix(lumpedD) ## this should be different every loop
+  mytree_upgma <- upgma(mytree_dist_matrix)
+  upgma_tree_scale <- t/sum(coalescent.intervals(mytree_upgma)$total.depth) ## scale factor to make total depth = t
+  L <- sum(coalescent.intervals(mytree_upgma)$lineages*coalescent.intervals(mytree_upgma)$interval.length)*upgma_tree_scale ## sum of all tree branches
+  
+  ## ----------------------- Method 2: Estimate theta using posterior mean--------------------------
+  C <- A$obsM # Counts
+  C <- flatten_upper(C) # make C a vector
+  post_mean_theta_vec_list[i,] <- (alpha + C)/(sum(C) + sum(alpha))
+  post_mean_lambda_vec_list[i] <- (sum(C) + 1)/(beta + L) # beta = 1, L = tree length (exposure time
+}
+detach("package:phangorn", unload = TRUE)
+
+boxplot(post_mean_theta_vec_list, outline=FALSE) 
+```
+
+Method 3 uses the posterior max of the following model.
+
+```{r}
+## MAP method
+map_theta_vec_list <- matrix(0, nrow = numSim, ncol=d_theta)
+map_lambda_vec_list <- c()
+
+# Methods 2 and 3 require upgma tree estimation, and the package causes conflicts with optim, so it is run separately.
+library("phangorn") ## to avoid problems with hash (required by state_space fn): detach("package:phangorn", unload = TRUE)
+for (i in 1:numSim){
+  D = datalist[[i]][[2]][1:n,]
+  lumpedD = datalist[[i]][[1]][1:n,]
+  A = observed_mutations2(D, S, lumpedD)
+  
+  # Posterior distribution depends on the total length of branches
+  # need to estimate UPGMA tree first
+  # UPGMA tree estimation depends on the data, so must be inside the loop, after new data is simulated
+  mytree_dist_matrix <- hamming_dist_matrix(lumpedD) ## this should be different every loop
+  mytree_upgma <- upgma(mytree_dist_matrix)
+  upgma_tree_scale <- t/sum(coalescent.intervals(mytree_upgma)$total.depth) ## scale factor to make total depth = t
+  L <- sum(coalescent.intervals(mytree_upgma)$lineages*coalescent.intervals(mytree_upgma)$interval.length)*upgma_tree_scale ## sum of all tree branches
+  
+  ## ----------------------- Method 3: Estimate theta using MAP------------------------------------------
+  C <- A$obsM # Counts
+  C <- flatten_upper(C) # make C a vector
+  map_theta_vec_list[i,] <- (alpha + C - 1)/(sum(C) + sum(alpha) - 1) # d_theta = dimension of theta
+  map_lambda_vec_list[i] <- sum(C)/(beta + L) # beta = 1, L = tree length
+}
+detach("package:phangorn", unload = TRUE)
+boxplot(map_theta_vec_list, outline=FALSE) 
+```

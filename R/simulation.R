@@ -1733,3 +1733,31 @@ transition_prob_finite_alleles <- function(parent, child, Pt, states, M, parent_
   }
   return(prob)
 }
+
+
+#' Piecewise Exponential Trajectory
+#'
+#' Computes a piecewise function over time \code{t}, useful for simulations
+#' along a fixed tree. The function is:
+#' \itemize{
+#'   \item \code{5} when \code{t <= 0.1}
+#'   \item \code{5 * exp(0.5 - 5t)} when \code{0.1 < t < 0.5}
+#'   \item \code{0.6766764} when \code{t >= 0.5}
+#' }
+#'
+#' @param(t) Numeric vector of time points.
+#'
+#' @return Numeric vector of trajectory values, same length as \code{t}.
+#'
+#' @examples
+#' t <- seq(0, 1, by = 0.01)
+#' plot(t, exp_traj(t), type = "l")
+#'
+#' @export
+exp_traj<-function(t){
+  result=rep(0,length(t))
+  result[t<=0.1]<-5
+  result[t>0.1 & t<0.5]<-5*exp(0.5-5*t[t>0.1 & t<0.5]) #50 times smaller
+  result[t>=0.5]<-0.6766764
+  return(result)
+}
