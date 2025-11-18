@@ -28,7 +28,6 @@ Simulate the tree topology. For these simulations, we will use a fixed tree topo
 set.seed(123)
 n = 5 # number tips or cells
 S = 3 # number of cut sites
-numSim = 50 # number of simulations
 
 # the tree is fixed, we are simulating multiple realizations
 simul1 <- coalsim(samp_times = 0, n_sampled = n, traj = exp_traj,method="tt",val_upper=11)
@@ -47,6 +46,7 @@ theta = matrix(c(1, .5, .5,
                   0,  0,  1), nrow=3, byrow=TRUE)
 Q = Q_matrix(states_matrix, theta)
 
+numSim = 50 # number of simulations
 datalist <- list()
 Dlist <- list()
 for (i in 1:numSim){
