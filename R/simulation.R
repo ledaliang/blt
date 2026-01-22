@@ -535,6 +535,7 @@ lumped_state <- function(state) {
 #' #
 #' # $obsA
 #' # [1] 2 1 1 0 1 0
+#' @export
 observed_mutations2 <- function(D, S, lumpedD = NA) {
   obsM <- matrix(0, nrow=S, ncol=S)
   obsA <- matrix(0, nrow=S, ncol=S)
@@ -589,6 +590,7 @@ observed_mutations2 <- function(D, S, lumpedD = NA) {
 #'
 #' @returns An SxS matrix with (i, i) the probability of a single cut at site i,
 #'          and (i, j), i < j, the probability of an overlapping cut from sites i to j.
+#' @export
 probs_function <- function(theta, observedMuts, t, S, states, states_matrix) {
 
   theta_matrix = matrix(0, nrow = S, ncol = S)
