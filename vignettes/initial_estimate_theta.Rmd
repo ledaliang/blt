@@ -65,7 +65,7 @@ t <- coalescent.intervals(mytree)$total.depth
 mom_theta_vec_list <- matrix(0, nrow = numSim, ncol = S*(S+1)/2) # store theta estimates from MoM
 for (i in 1:numSim) {
   lumpedD = datalist[[i]][[1]][1:n,]
-  A = observed_mutations2(D, S, lumpedD)
+  A = observed_mutations(D, S, lumpedD)
   B <- A$obsM/n
   
   # Initial value of theta for optimization
@@ -112,7 +112,7 @@ library("phangorn") ## to avoid problems with hash (required by state_space fn):
 for (i in 1:numSim){
   D = datalist[[i]][[2]][1:n,]
   lumpedD = datalist[[i]][[1]][1:n,]
-  A = observed_mutations2(D, S, lumpedD)
+  A = observed_mutations(D, S, lumpedD)
   
   # Posterior distribution depends on the total length of branches
   # need to estimate UPGMA tree first

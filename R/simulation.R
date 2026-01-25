@@ -536,7 +536,7 @@ lumped_state <- function(state) {
 #' # $obsA
 #' # [1] 2 1 1 0 1 0
 #' @export
-observed_mutations2 <- function(D, S, lumpedD = NA) {
+observed_mutations <- function(D, S, lumpedD = NA) {
   obsM <- matrix(0, nrow=S, ncol=S)
   obsA <- matrix(0, nrow=S, ncol=S)
   n = nrow(D)
