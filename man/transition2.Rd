@@ -4,36 +4,21 @@
 \alias{transition2}
 \title{Transition Function}
 \usage{
-transition2(parent, t, Q, states)
+transition2(parent, t, q, states)
 }
 \arguments{
-\item{(parent)}{Parent state vector}
+\item{parent}{Parent state vector}
 
-\item{(t)}{Time duration}
+\item{t}{Time duration}
 
-\item{(Q)}{Rate matrix (ouput from Q_matrix)}
+\item{q}{Rate matrix (output from q_matrix)}
 
-\item{(states)}{Matrix of possible states (output from state_space_matrix)}
+\item{states}{Matrix of possible states (output from state_space_matrix)}
 }
 \value{
-A transition in time t from a given parent and rate matrix Q
+A transition in time t from a given parent and rate matrix q
 }
 \description{
-Computes the transition probabilities given a parent state, time t, and rate matrix Q, and samples a new state.
-}
-\examples{
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 2 2 1
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 0 0 1
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 0 1 1
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 0 1 1
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 0 3 3
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 1 1 0
-transition2(c(0,0,0), 1, Q, states_matrix)
-# 1 3 3
+Computes the transition probabilities given a parent state, time t,
+and rate matrix q, and samples a new state.
 }

@@ -7,19 +7,24 @@
 matching(tree)
 }
 \arguments{
-\item{(tree)}{An ape tree object}
+\item{tree}{An ape tree object}
 }
 \value{
-(n-1)x3 matrix where each row is a merge event. The first two coordinates
-         represent the labels of the children and the third coordinate is the label of the parent node
+(n-1)x3 matrix where each row is a merge event. The first two
+coordinates represent the labels of the children and the third coordinate is
+the label of the parent node
 }
 \description{
 This function returns the matching representation of an ape tree as a matrix.
-Each row is a merge and the third entry in the row is the label of the interior node for th emerge.
-Leaves are 1,...,n and interior nodes are n+1, .., 2n-1 (Note that ape labels with te root as n+1)
-Warning: this may give invalid tree if an edge length is 0 (which can happen with upgma)
+Each row is a merge and the third entry in the row is the label of the
+interior node for th emerge. Leaves are 1,...,n and interior nodes are
+n+1, .., 2n-1 (Note that ape labels with te root as n+1)
+Warning: this may give invalid tree if an edge length is 0
+(which can happen with upgma)
 }
 \examples{
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
+mytree <- phylodyn::generate_newick((simul1))$newick
 matching(mytree)
 #      [,1] [,2] [,3]
 # [1,]    1    8    9

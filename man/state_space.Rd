@@ -4,10 +4,10 @@
 \alias{state_space}
 \title{State Space Hash Table}
 \usage{
-state_space(S)
+state_space(s)
 }
 \arguments{
-\item{(s)}{Number of sites}
+\item{s}{Number of sites}
 }
 \value{
 A hash table mapping state strings to their indices

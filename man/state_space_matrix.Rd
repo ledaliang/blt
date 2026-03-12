@@ -4,13 +4,13 @@
 \alias{state_space_matrix}
 \title{State Space Matrix}
 \usage{
-state_space_matrix(S)
+state_space_matrix(s)
 }
 \arguments{
-\item{(S)}{Number of sites}
+\item{s}{Number of sites}
 }
 \value{
-An nxS matrix where each row represents a state
+An nxs matrix where each row represents a state
 with one column for each site.
 }
 \description{

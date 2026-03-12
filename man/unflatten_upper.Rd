@@ -19,7 +19,7 @@ upper triangular matrix (including main diagonal). Zeros are filled in
 the lower triangular part.
 }
 \examples{
-theta <- c(1,2,3,4,5,6)
+theta <- c(1, 2, 3, 4, 5, 6)
 unflatten_upper(theta)
 #      [,1] [,2] [,3]
 # [1,]    1    4    6

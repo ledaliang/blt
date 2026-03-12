@@ -4,37 +4,34 @@
 \alias{observed_mutations}
 \title{Observed Mutations}
 \usage{
-observed_mutations(D, S, lumpedD = NA)
+observed_mutations(d, s, lumped_d = NA)
 }
 \arguments{
-\item{(D)}{Matrix of allele states at the tips}
+\item{d}{Matrix of allele states at the tips}
 
-\item{(S)}{Number of sites}
+\item{s}{Number of sites}
 
-\item{(lumpedD)}{(Optional) Matrix of lumped states at the tips}
+\item{lumped_d}{(Optional) Matrix of lumped states at the tips}
 }
 \value{
-An SxS matrix where S[i,i] is number of cells with a single mutation
-         in site i, S[i, j], i < j, is number of cells with an overlapping mutation going from i to j
-\describe{
-   \item{\code{obsM}}{An SxS matrix where S[i,i] is number of cells with a single mutation
-         in site i, S[i, j], i < j, is number of cells with an overlapping mutation going from i to j}
-   \item{\code{vecA}}{A S(S+1)/2 vector that is a flattened version of obsM}
-}
+An sxs matrix where s[i,i] is number of cells with a single mutation
+         in site i, s[i, j], i < j, is number of cells with an overlapping
+         mutation going from i to j
 }
 \description{
-This function counts the number of observed mutations from the matrix D, which stores alleles data from the tips.
-Note that this function will return counts only based on the lumped mutation state, not the allele states
+This function counts the number of observed mutations from the matrix D,
+which stores alleles data from the tips. Note that this function will return
+counts only based on the lumped mutation state, not the allele states
 }
 \examples{
-simul1<-coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
-mytree <- generate_newick((simul1))$newick
-theta = matrix(c(1,1,1,0,1,1,0,0,1), nrow=3, byrow=TRUE)
-Q = Q_matrix(states_matrix, theta)
-states_matrix = state_space_matrix(3)
-M = matrix(20, nrow = S, ncol = 3)
-datalist <- simulate_data_finite_alleles(mytree, Q, states_matrix, M)
-observed_mutations2(datalist[[2]], 3)
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
+mytree <- phylodyn::generate_newick((simul1))$newick
+theta <- matrix(c(1, 1, 1, 0, 1, 1, 0, 0, 1), nrow = 3, byrow = TRUE)
+states_matrix <- state_space_matrix(3)
+q <- q_matrix(states_matrix, theta)
+M <- matrix(20, nrow = 3, ncol = 3)
+datalist <- simulate_data_finite_alleles(mytree, q, states_matrix, M)
+observed_mutations(datalist[[2]], 3)
 # $obsM
 #      [,1] [,2] [,3]
 # [1,]    2    0    0

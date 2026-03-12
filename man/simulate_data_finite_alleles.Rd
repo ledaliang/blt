@@ -4,19 +4,21 @@
 \alias{simulate_data_finite_alleles}
 \title{Simulate Data Finite Alleles}
 \usage{
-simulate_data_finite_alleles(tree, Q, states_matrix, M)
+simulate_data_finite_alleles(tree, q, states_matrix, m)
 }
 \arguments{
-\item{(tree)}{An ape tree object}
+\item{tree}{An ape tree object}
 
-\item{(Q)}{Rate matrix for mutation states (output of Q_matrix)}
+\item{q}{Rate matrix for mutation states (output of q_matrix)}
 
-\item{(states)}{Matrix storing possible mutation states (output of state_space_matrix)
-M(i, i) is the number of alleles at site i, M(i, j) is the number of alleles from a simultaneous cut
-at sites i, j. In principle these numbers could be the same and we could input a single parameter,
-but we will leave it as matrix for full generality.}
+\item{states_matrix}{Matrix storing possible mutation states
+(output of state_space_matrix). M(i, i) is the number of alleles at site i,
+M(i, j) is the number of alleles from a simultaneous cut at sites i, j.
+In principle these numbers could be the same and we could input a single
+parameter, but we will leave it as matrix for full generality.}
 
-\item{(M)}{Symmetric matrix which stores the number of alleles per site or site group}
+\item{m}{Symmetric matrix which stores the number of alleles per site or
+site group}
 }
 \value{
 A list where the first entry is the matrix of mutation states
@@ -28,8 +30,8 @@ This function simulates allele data for all nodes of the tree
 at the root and simulating the Markov mutation process down the tree.
 }
 \examples{
-simul1<-coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
-mytree <- generate_newick((simul1))$newick
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
+mytree <- phylodyn::generate_newick((simul1))$newick
 # Phylogenetic tree with 5 tips and 4 internal nodes.
 #
 # Tip labels:
@@ -37,8 +39,10 @@ mytree <- generate_newick((simul1))$newick
 #
 #  Rooted; includes branch lengths.
 
-theta = matrix(c(1,1,1,0,1,1,0,0,1), nrow=3, byrow=TRUE)
-Q = Q_matrix(states_matrix, theta)
+theta <- matrix(c(1, 1, 1, 0, 1, 1, 0, 0, 1), nrow = 3, byrow = TRUE)
+S <- 3
+states_matrix <- state_space_matrix(S)
+Q <- q_matrix(states_matrix, theta)
 #       [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10] [,11] [,12] [,13]
 #  [1,]    0    0  0.0    0  0.0  0.0  0.0  0.0    0   0.0   0.0   0.0   0.0
 #  [2,]    1   -1  0.0    0  0.0  0.0  0.0  0.0    0   0.0   0.0   0.0   0.0
@@ -54,7 +58,6 @@ Q = Q_matrix(states_matrix, theta)
 # [12,]    0    0  0.0    1  0.0  0.5  0.0  0.0    1   0.0   0.0  -2.5   0.0
 # [13,]    0    0  0.0    0  1.0  0.0  0.5  0.2    0   1.0   0.5   1.0  -4.2
 
-states_matrix = state_space_matrix(S)
 #       [,1] [,2] [,3]
 #  [1,]    1    1    1
 #  [2,]    0    1    1
@@ -70,7 +73,7 @@ states_matrix = state_space_matrix(S)
 # [12,]    1    0    0
 # [13,]    0    0    0
 
-M = matrix(20, nrow = S, ncol = S)
+M <- matrix(20, nrow = S, ncol = S)
 simulate_data_finite_alleles(mytree, Q, states_matrix, M)
 # [[1]]
 #      [,1] [,2] [,3]

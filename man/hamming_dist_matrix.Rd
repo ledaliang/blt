@@ -18,7 +18,7 @@ The function returns a symmetric distance matrix where entry \code{(i, j)}
 is the number of positions where rows \code{i} and \code{j} differ.
 }
 \examples{
-mat <- matrix(c(0,1,0, 1,1,0, 0,0,1), nrow = 3, byrow = TRUE)
+mat <- matrix(c(0, 1, 0, 1, 1, 0, 0, 0, 1), nrow = 3, byrow = TRUE)
 hamming_dist_matrix(mat)
 
 }

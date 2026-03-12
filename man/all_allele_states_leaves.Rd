@@ -7,31 +7,32 @@
 all_allele_states_leaves(m_state, leaves)
 }
 \arguments{
-\item{m_state}{A numeric or character vector of length \eqn{S} representing the
-mutation state of an allele across \eqn{S} sites.}
+\item{m_state}{A numeric or character vector of length \eqn{S} representing
+the mutation state of an allele across \eqn{S} sites.}
 
-\item{leaves}{A character matrix of dimension \eqn{n \times S}, where each row
-is a leaf allele state across all sites. Used to restrict the possible allele
-values at each site to those already observed.}
+\item{leaves}{A character matrix of dimension \eqn{n \times S}, where each
+row is a leaf allele state across all sites. Used to restrict the possible
+allele values at each site to those already observed.}
 }
 \value{
 A character matrix of dimension \eqn{K \times S}, where \eqn{K} is the total
-number of valid allele configurations based on the mutation state and observed
-leaves. Each row is an allele state composed from leaf-observed alleles or the
-wildcard symbol \code{"WC"}.
+number of valid allele configurations based on the mutation state and
+observed leaves. Each row is an allele state composed from leaf-observed
+alleles or the wildcard symbol \code{"WC"}.
 }
 \description{
-Computes all possible allele configurations corresponding to a given mutation state,
-but restricts the allowable allele values at each site to only those observed in
-the leaves (i.e., tip nodes) of the phylogenetic tree. A special wildcard allele
-is added to model the effect of any allele not observed in the leaves.
+Computes all possible allele configurations corresponding to a given mutation
+state, but restricts the allowable allele values at each site to only those
+observed in the leaves (i.e., tip nodes) of the phylogenetic tree. A special
+wildcard allele is added to model the effect of any allele not observed in
+the leaves.
 }
 \details{
 This function is used as part of the approximate likelihood calculation in
 \code{\link{pq_vectors}}. Instead of expanding all possible alleles at each
 site or overlapping block (as done in \code{\link{all_allele_states}}),
-this function considers only alleles already present in the observed leaf data,
-plus a suffix `"WC"` denoting a wildcard allele (for unseen alleles).
+this function considers only alleles already present in the observed leaf
+data, plus a suffix `"WC"` denoting a wildcard allele (for unseen alleles).
 
 The mutation state vector \code{m_state} has the same interpretation as in
 \code{\link{all_allele_states}}: positions with value \code{0} indicate no

@@ -4,10 +4,10 @@
 \alias{state_space_list}
 \title{State Space List}
 \usage{
-state_space_list(S)
+state_space_list(s)
 }
 \arguments{
-\item{(S)}{}
+\item{s}{Number of sites}
 }
 \value{
 A list of all possible states
@@ -20,5 +20,6 @@ shared between multiple adjacent sites
 }
 \examples{
 state_space_list(3)
-# [[111],[011],[221],[101],[001],[122],[022],[222],[110],[010],[220],[100],[000]]
+# [[111],[011],[221],[101],[001],[122],[022],[222],
+# [110],[010],[220],[100],[000]]
 }

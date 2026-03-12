@@ -7,7 +7,7 @@
 relabel(states)
 }
 \arguments{
-\item{(states)}{A list of states}
+\item{states}{A list of states}
 }
 \value{
 A matrix of relabeled states
@@ -20,7 +20,23 @@ will return a list containing states 122 and 022 that will be
 relabeled to 133 and 033 respectively.
 }
 \examples{
-relabel([[111],[011],[221],[101],[001],[122],[022],[222],[110],[010],[220],[100],[000]])
+states <- list(
+  c(1, 1, 1),
+  c(0, 1, 1),
+  c(2, 2, 1),
+  c(1, 0, 1),
+  c(0, 0, 1),
+  c(1, 2, 2),
+  c(0, 2, 2),
+  c(2, 2, 2),
+  c(1, 1, 0),
+  c(0, 1, 0),
+  c(2, 2, 0),
+  c(1, 0, 0),
+  c(0, 0, 0)
+)
+
+relabel(states)
 #       [,1] [,2] [,3]
 #  [1,]    1    1    1
 #  [2,]    0    1    1
@@ -35,4 +51,5 @@ relabel([[111],[011],[221],[101],[001],[122],[022],[222],[110],[010],[220],[100]
 # [11,]    2    2    0
 # [12,]    1    0    0
 # [13,]    0    0    0
+
 }

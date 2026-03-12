@@ -7,20 +7,25 @@
 decompose_branches(pairs)
 }
 \arguments{
-\item{(pairs)}{Matching representation of the tree (output of matching function)}
+\item{pairs}{Matching representation of the tree (output of matching
+function)}
 }
 \value{
 A (2n -2)x(n-1) matrix where each row represents a branch and
-         each column represents an intercoalescent time. Each branch length b_j
-         can be written as a sum of intercoalescent times. A[j, i] = 1 if branch j uses intercoalescent time i.
+         each column represents an intercoalescent time. Each branch length
+b_j can be written as a sum of intercoalescent times. A[j, i] = 1 if branch j
+ uses intercoalescent time i.
 }
 \description{
-This function decomposes the branch lengths of the tree into a matrix of intercalescent times.
+This function decomposes the branch lengths of the tree into a matrix of
+intercalescent times.
 }
 \examples{
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
+mytree <- phylodyn::generate_newick((simul1))$newick
 plot(mytree)
-nodelabels()
-#' pairs = matching(mytree)
+ape::nodelabels()
+pairs <- matching(mytree)
 #      [,1] [,2] [,3]
 # [1,]    1    8    9
 # [2,]    2    7    8
@@ -37,4 +42,5 @@ decompose_branches(pairs)
 # [6,]    0    1    0    0
 # [7,]    0    0    1    0
 # [8,]    0    0    0    1
+
 }

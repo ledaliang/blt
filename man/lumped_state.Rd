@@ -7,22 +7,22 @@
 lumped_state(state)
 }
 \arguments{
-\item{(state)}{Sx1 vector of allele states}
+\item{state}{sx1 vector of allele states}
 }
 \value{
-Sx1 vector of lumped states using mutation state notation
+sx1 vector of lumped states using mutation state notation
 }
 \description{
 Removes mutation labels from the full state to give a lumped state
 }
 \examples{
-simul1<-coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
-mytree <- generate_newick((simul1))$newick
-theta = matrix(c(1,1,1,0,1,1,0,0,1), nrow=3, byrow=TRUE)
-Q = Q_matrix(states_matrix, theta)
-states_matrix = state_space_matrix(S)
-M = matrix(20, nrow = S, ncol = S)
-datalist <- simulate_data_finite_alleles(mytree, Q, states_matrix, M)
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = 5, traj = exp_traj,method="tt",val_upper=11)
+mytree <- phylodyn::generate_newick((simul1))$newick
+theta <- matrix(c(1, 1, 1, 0, 1, 1, 0, 0, 1), nrow = 3, byrow = TRUE)
+states_matrix <- state_space_matrix(3)
+q <- q_matrix(states_matrix, theta)
+M <- matrix(20, nrow = 3, ncol = 3)
+datalist <- simulate_data_finite_alleles(mytree, q, states_matrix, M)
 datalist[[2]]
 #      [,1]   [,2]   [,3]
 # [1,] "1:18" "0"    "3:7"
@@ -35,8 +35,9 @@ datalist[[2]]
 # [8,] "0"    "0"    "0"
 # [9,] "0"    "0"    "0"
 
-lumped_state(datalist[[2]][1,])
+lumped_state(datalist[[2]][1, ])
 # 1 0 1
-lumped_state(datalist[[2]][5,])
+lumped_state(datalist[[2]][5, ])
 # 1 3 3
+
 }

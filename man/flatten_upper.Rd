@@ -4,14 +4,14 @@
 \alias{flatten_upper}
 \title{Flatten Upper Triangular Matrix by Diagonals}
 \usage{
-flatten_upper(M)
+flatten_upper(m)
 }
 \arguments{
-\item{M}{A square matrix.}
+\item{m}{A square matrix.}
 }
 \value{
-A numeric vector containing the upper triangular elements of \code{M},
-        ordered by diagonal.
+A numeric vector containing the upper triangular elements of
+        \code{m}, ordered by diagonal.
 }
 \description{
 Converts the upper triangular part of a square matrix into a vector,
@@ -28,10 +28,12 @@ becomes:
 \code{c(theta1, theta2, theta3, theta12, theta23, theta13)}.
 }
 \examples{
-M <- matrix(c(1, 2, 3,
-              0, 4, 5,
-              0, 0, 6), nrow = 3, byrow = TRUE)
-flatten_upper(M)
+m <- matrix(c(
+  1, 2, 3,
+  0, 4, 5,
+  0, 0, 6
+), nrow = 3, byrow = TRUE)
+flatten_upper(m)
 # Output: 1 4 6 2 5 3
 
 }

@@ -9,7 +9,7 @@
 #' @return A symmetric numeric distance matrix.
 #'
 #' @examples
-#' mat <- matrix(c(0,1,0, 1,1,0, 0,0,1), nrow = 3, byrow = TRUE)
+#' mat <- matrix(c(0, 1, 0, 1, 1, 0, 0, 0, 1), nrow = 3, byrow = TRUE)
 #' hamming_dist_matrix(mat)
 #'
 #' @export
@@ -17,13 +17,13 @@ hamming_dist_matrix <- function(data) {
   ## Data in the form of lumpedD
   n <- nrow(data)
   dist_matrix <- matrix(0, nrow = n, ncol = n)
-  for (i in 1:(n-1)) {
-    for (j in (i+1):n) {
-      dist_matrix[i,j] <- sum(data[i,] != data[j,])
-      dist_matrix[j,i] <- dist_matrix[i,j]
+  for (i in 1:(n - 1)) {
+    for (j in (i + 1):n) {
+      dist_matrix[i, j] <- sum(data[i, ] != data[j, ])
+      dist_matrix[j, i] <- dist_matrix[i, j]
     }
   }
-  return(dist_matrix)
+  dist_matrix
 }
 
 
@@ -41,19 +41,21 @@ hamming_dist_matrix <- function(data) {
 #' becomes:
 #' \code{c(theta1, theta2, theta3, theta12, theta23, theta13)}.
 #'
-#' @param M A square matrix.
-#' @return A numeric vector containing the upper triangular elements of \code{M},
-#'         ordered by diagonal.
+#' @param m A square matrix.
+#' @return A numeric vector containing the upper triangular elements of
+#'         \code{m}, ordered by diagonal.
 #'
 #' @examples
-#' M <- matrix(c(1, 2, 3,
-#'               0, 4, 5,
-#'               0, 0, 6), nrow = 3, byrow = TRUE)
-#' flatten_upper(M)
+#' m <- matrix(c(
+#'   1, 2, 3,
+#'   0, 4, 5,
+#'   0, 0, 6
+#' ), nrow = 3, byrow = TRUE)
+#' flatten_upper(m)
 #' # Output: 1 4 6 2 5 3
 #'
 #' @export
-flatten_upper <- function(M) {
+flatten_upper <- function(m) {
   # Flattens theta upper triangular theta matrix into theta vector.
   # Input:
   # theta = [theta1, theta12, theta13]
@@ -61,17 +63,16 @@ flatten_upper <- function(M) {
   #         [0     , 0      , theta3 ]
   # Output:
   # theta = [theta1, theta2, theta3, theta12, theta23, theta13]
-  S <- nrow(M)
+  s <- nrow(m)
   out <- c()
-  for (k in 0:(S-1)) {
-    for (i in 1:(S-k)) {
+  for (k in 0:(s - 1)) {
+    for (i in 1:(s - k)) {
       j <- i + k
-      out <- c(out, M[i, j])
+      out <- c(out, m[i, j])
     }
   }
-  return(out)
+  out
 }
-
 
 
 #' Reconstruct Upper Triangular Matrix from Flattened Vector
@@ -86,7 +87,7 @@ flatten_upper <- function(M) {
 #' @return A square matrix \code{M} such that \code{flatten_upper(M) == v}.
 #'
 #' @examples
-#' theta <- c(1,2,3,4,5,6)
+#' theta <- c(1, 2, 3, 4, 5, 6)
 #' unflatten_upper(theta)
 #' #      [,1] [,2] [,3]
 #' # [1,]    1    4    6
@@ -97,20 +98,18 @@ flatten_upper <- function(M) {
 unflatten_upper <- function(v) {
   # Solve quadratic to find matrix size S from length of v
   len <- length(v)
-  S <- (-1 + sqrt(1 + 8 * len)) / 2
-  if (S != floor(S)) stop("Vector length is not valid for triangular matrix.")
+  s <- (-1 + sqrt(1 + 8 * len)) / 2
+  if (s != floor(s)) stop("Vector length is not valid for triangular matrix.")
 
-  M <- matrix(0, nrow = S, ncol = S)
+  m <- matrix(0, nrow = s, ncol = s)
 
   idx <- 1
-  for (k in 0:(S-1)) {
-    for (i in 1:(S-k)) {
+  for (k in 0:(s - 1)) {
+    for (i in 1:(s - k)) {
       j <- i + k
-      M[i, j] <- v[idx]
+      m[i, j] <- v[idx]
       idx <- idx + 1
     }
   }
-  return(M)
+  m
 }
-
-

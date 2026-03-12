@@ -4,7 +4,7 @@
 \alias{possible_parents_approximate}
 \title{Compute Approximate Parental Allele States Using Leaf Alleles}
 \usage{
-possible_parents_approximate(child, states, states_matrix, T_prob, leaves)
+possible_parents_approximate(child, states, states_matrix, t_prob, leaves)
 }
 \arguments{
 \item{child}{A character vector of length \eqn{S} representing the observed
@@ -16,7 +16,7 @@ encodings.}
 \item{states_matrix}{A matrix encoding valid combinations of lumped allele
 states, for efficient lookup and indexing during recombination.}
 
-\item{T_prob}{A precomputed list or structure of transition probabilities,
+\item{t_prob}{A precomputed list or structure of transition probabilities,
 governing lumped allele transitions.}
 
 \item{leaves}{A matrix where each row is a valid allele configuration
@@ -24,13 +24,14 @@ observed in the tree leaves (tip nodes). These are used to restrict masked
 overlaps.}
 }
 \value{
-A list of character vectors, each of length \eqn{S}, corresponding to possible
-parental allele configurations for the given child under the approximate scheme.
+A list of character vectors, each of length \eqn{S}, corresponding to
+possible parental allele configurations for the given child under the
+approximate scheme.
 }
 \description{
 Computes all valid parental allele configurations for a given child allele
 under an approximate finite-alleles mutation model. Unlike the exact version
-implemented in \code{\link{possible_parents_FA}}, this function restricts
+implemented in \code{\link{possible_parents_fa}}, this function restricts
 overlap-resolving mutations to only those alleles that appear in the observed
 leaf data (plus one wildcard for unseen alleles).
 }
@@ -43,6 +44,6 @@ limits possible alleles at each masked site to those observed in the leaf
 set (plus a single wildcard to model any unseen allele).
 
 This can drastically reduce the number of possible masked configurations,
-making computation practical for large trees, while still preserving the major
-allele patterns.
+making computation practical for large trees, while still preserving the
+major allele patterns.
 }

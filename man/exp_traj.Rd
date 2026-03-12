@@ -4,10 +4,10 @@
 \alias{exp_traj}
 \title{Piecewise Exponential Trajectory}
 \usage{
-exp_traj(t)
+exp_traj(time)
 }
 \arguments{
-\item{(t)}{Numeric vector of time points.}
+\item{time}{Numeric vector of time points.}
 }
 \value{
 Numeric vector of trajectory values, same length as \code{t}.
