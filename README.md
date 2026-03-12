@@ -13,17 +13,16 @@ This is a branch forked from mdkarcher/phylodyn. The purpose of this branch of `
 
 3. Load `devtools` using `library(devtools)`.
 
-4. Install `phylodyn` using
+4. Install `blt` using
 
     a. `install_github("ledaliang/blt")`, or
 
 ## Vignettes
 
-1. Simulation
+1. Estimating Theta
 
 ## Datasets
 
-Datasets below can be found at: 
 
 ## References
 
