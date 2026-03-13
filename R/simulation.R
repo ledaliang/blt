@@ -1065,6 +1065,8 @@ pq_vectors <- function(
 #'   \item{\code{p}}{An \eqn{A \times (2n - 1)} matrix of initialized forward
 #' probabilities.}
 #' }
+#'
+#' @export
 haplotypes <- function(d, n, s) {
   # Because it is function of the data only, we only need to run it once
   # Initialize the p-vectors with the data
