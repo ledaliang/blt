@@ -1,0 +1,173 @@
+---
+title: "Estimating Effective Population Size N_e"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{estimating_n_e}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(blt)
+```
+
+First simulate the tree using the bounded coalescent model.
+
+```{r}
+num_tips <- 100
+s <- 3
+
+simul <- coalsim_bounded(
+  samp_times = 0,
+  n_sampled  = num_tips,
+  traj       = blt::exp_traj,
+  bound      = 1,
+  val_upper  = 11
+)
+mytree <- phylodyn::generate_newick(simul)$newick
+mytree$coal_times <- phylodyn::summarize_phylo(mytree)$coal_times
+```
+
+The bounded coalescent model depends on a trajectory that we can specify. To evaluate our method, we test several different trajectories including an exponential trajector, constant trajectory, and a piecewise trajectory.
+
+```{r}
+constant_traj <- function(time) {
+  rep(5, length(time))
+}
+
+
+expo_traj <- function(time) {
+  exp(4 - time)
+}
+
+exp_traj2 <- function(time) {
+  5 * blt::exp_traj(time)
+}
+```
+
+To estimate coalescent times, we compare 4 methods. The first method is BNPR.
+
+```{r}
+bnpr_plot <- function(tree, traj) {
+  fit <- phylodyn::BNPR(mytree)
+  bnpr_time_grid <- fit$x
+  bnpr_ne_mean <- fit$effpopmean
+  bnpr_ne_lo <- fit$effpop025
+  bnpr_ne_hi <- fit$effpop975
+  bnpr_ne_true <- traj(bnpr_time_grid)
+
+  plot(
+    bnpr_time_grid, bnpr_ne_mean,
+    type = "n",
+    log = "y",
+    xlim = rev(range(bnpr_time_grid)),
+    ylim = range(c(bnpr_ne_lo, bnpr_ne_hi, bnpr_ne_true), finite = TRUE),
+    xlab = "",
+    ylab = "",
+    cex.axis = 1.5,
+    asp = 1
+  )
+  polygon(
+    c(bnpr_time_grid, rev(bnpr_time_grid)),
+    c(bnpr_ne_lo, rev(bnpr_ne_hi)),
+    col = "grey80",
+    border = NA
+  )
+  lines(bnpr_time_grid, bnpr_ne_mean, lwd = 2)
+  lines(bnpr_time_grid, bnpr_ne_true, lty = 2)
+}
+
+bnpr_plot(mytree, expo_traj)
+```
+
+The second method is using the skyline MLE estimation in the `ape` package, which does not account for the bounded coalescent in the model.
+
+```{r}
+ape_skyline_plot <- function(mytree, traj, title = "ape_skyline") {
+  sky <- ape::skyline(mytree)
+  time_grid <- sky$time
+  ne_hat <- sky$population.size
+  ne_true <- traj(time_grid)
+
+  plot(
+    time_grid, ne_hat,
+    type = "n",
+    log = "y",
+    xlim = rev(range(time_grid)),
+    ylim = c(0.01, max(c(ne_hat, ne_true), na.rm = TRUE)),
+    xlab = "",
+    ylab = "",
+    cex.axis = 1.5,
+    asp = 1
+  )
+
+  lines(time_grid, ne_hat, lwd = 2, type = "s")
+  lines(time_grid, ne_true, lty = 2)
+}
+
+ape_skyline_plot(mytree, expo_traj)
+```
+
+The 3rd method is the skyline MLE estimation using our method which accounts for the bounded coalescent model.
+
+```{r}
+skyline_plot <- function(tree, traj, title) {
+  tree_height <- ape::coalescent.intervals(mytree)$total.depth
+  new_fit <- bounded_skyline_ascent(mytree, bound = tree_height)
+
+  new_time_grid <- new_fit$grid
+  new_ne <- new_fit$Ne
+
+  new_ne_true <- traj(new_time_grid)
+
+  plot(
+    new_time_grid, new_ne,
+    type = "n",
+    log = "y",
+    xlim = rev(range(new_time_grid)),
+    ylim = c(.01, max(c(new_ne, new_ne_true), na.rm = TRUE)),
+    xlab = "",
+    ylab = "",
+    cex.axis = 1.5,
+    asp = 1
+  )
+
+  lines(new_time_grid, new_ne, lwd = 2, type = "s")
+  lines(new_time_grid, new_ne_true, lty = 2)
+}
+skyline_plot(mytree, expo_traj)
+```
+
+The final method is the MLE estmation over a grid of times that also accounts for the bounded coalescent model.
+
+```{r}
+mle_plot <- function(tree, traj, title) {
+  tree_height <- ape::coalescent.intervals(mytree)$total.depth
+  mle_fit <- mle_bounded_coal(mytree, bound = tree_height, lengthout = 50)
+  mle_ne <- mle_fit$effpop
+  mle_time_grid <- mle_fit$grid
+
+  plot(
+    mle_time_grid, mle_ne,
+    type = "s",
+    log = "y",
+    xlim = rev(range(mle_time_grid)),
+    ylim = range(c(mle_ne, traj(mle_time_grid)), finite = TRUE),
+    xlab = "",
+    ylab = "",
+    cex.axis = 1.5,
+    asp = 1
+  )
+
+  lines(mle_time_grid, traj(mle_time_grid), lty = 2)
+}
+mle_plot(mytree, expo_traj)
+```
+
