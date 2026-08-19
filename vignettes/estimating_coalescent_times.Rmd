@@ -1,0 +1,192 @@
+---
+title: "Estimating Coalescent Times"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Estimating Coalescent Times}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This vignette estimates the coalescent times of a lineage tracing tree. A tree
+is simulated, alleles are simulated along it, and then everything is held fixed
+except the branch lengths: the topology, the mutation rates and the number of
+alleles per site are all given, and only the intercoalescent times are
+estimated.
+
+```{r setup}
+library(blt)
+library(ape)
+```
+
+## Simulating the tree
+
+`phylodyn` supplies the tree topology (it can be installed following these
+[instructions](https://github.com/JuliaPalacios/phylodyn/tree/master)).
+
+```{r}
+set.seed(123)
+n <- 5 # number of tips or cells
+s <- 3 # number of cut sites
+
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = n, traj = exp_traj,
+                            method = "tt", val_upper = 11)
+mytree <- phylodyn::generate_newick((simul1))$newick
+```
+
+The quantities we want to recover are the intercoalescent times
+$u = (u_1, \ldots, u_{n-1})$, where $u_k$ is the length of the interval during
+which the tree has $k + 1$ lineages. `ape::coalescent.intervals()` returns them
+for the simulated tree, and the total depth is the height of the tree.
+
+```{r}
+intervals <- coalescent.intervals(mytree)
+true_ict <- intervals$interval.length # intercoalescent times u_1, ..., u_{n-1}
+tree_height <- intervals$total.depth
+true_ict
+```
+
+The topology is held fixed throughout, and is represented by the matching
+returned by `matching()`. Row $r$ stores the two children and the parent of the
+$r$th coalescent event, counting from the present.
+
+```{r}
+pairs <- matching(mytree)
+pairs
+```
+
+The likelihood is a function of the $2n - 2$ branch lengths
+$b = (b_1, \ldots, b_{2n-2})$, but every branch length is a sum of
+intercoalescent times, so $b = A u$ where $A$ is the $(2n - 2) \times (n - 1)$
+matrix returned by `decompose_branches()`. The optimization below is therefore
+carried out over $u$, the $n - 1$ intercoalescent times, rather than over $b$.
+$b$ is only ever computed from $u$ as $Au$. This is what keeps the tree
+ultrametric, since any $u$ at all gives a tree whose tips are all at the same
+height.
+
+```{r}
+a <- decompose_branches(pairs)
+a
+true_b <- a %*% matrix(true_ict, ncol = 1)
+```
+
+## The mutation model
+
+Each of the `s` sites is either uncut or carries one of a number of alleles. A
+single cut can span several adjacent sites at once, in which case it overwrites
+whatever those sites carried before. `state_space()` and `state_space_matrix()`
+enumerate the resulting mutation states, and `q_matrix()` turns a matrix of
+rates `theta` into the rate matrix `q` over those states, where `theta[i, i]`
+is the rate of a cut at site `i` alone and `theta[i, j]` the rate of a single
+cut spanning sites `i` through `j`.
+
+The rates are held at the values the data is simulated under, since only the
+times are being estimated. `m` is the number of distinct alleles a cut can
+produce, and `t_prob` is the matrix of transition probabilities over one unit
+of time.
+
+```{r}
+states <- state_space(s)
+states_matrix <- state_space_matrix(s)
+theta <- matrix(1, nrow = s, ncol = s)
+q <- q_matrix(states_matrix, theta)
+eigen_q <- eigen(q)
+eigen_q$inv <- solve(eigen_q$vectors)
+t_prob <- eigen_q$vectors %*% diag(exp(eigen_q$values)) %*% eigen_q$inv
+m <- matrix(20, nrow = s, ncol = s)
+```
+
+## Simulating data on the fixed tree
+
+`simulate_data_finite_alleles()` starts from the unmutated state at the root
+and simulates the mutation process down the tree. Only the leaves are observed,
+and `haplotypes()` turns the observed alleles into the initial forward
+probabilities used by the likelihood.
+
+```{r}
+sim <- simulate_data_finite_alleles(mytree, q, states_matrix, m)
+d <- sim[[2]][1:n, ] # allele states at the leaves
+hap <- haplotypes(d, n, s)
+d
+```
+
+`branch_loglik()` evaluates the log-likelihood of the data for a given set of
+branch lengths. Evaluating it at the true branch lengths gives the value that
+the optimizer is trying to reach.
+
+```{r}
+true_loglik <- branch_loglik(pairs, d, hap, true_b, eigen_q, states,
+                             states_matrix, m, t_prob, approx = 1)
+true_loglik
+```
+
+## Estimating the times
+
+`estimate_coal_times()` maximizes this log-likelihood over the intercoalescent
+times by gradient ascent with an AdaGrad step size. The gradient with respect
+to the branch lengths comes from the forward and backward probability vectors,
+and the chain rule $\partial \ell / \partial u = A^{T} \partial \ell /
+\partial b$ turns it into a gradient with respect to the times. After every
+step the times are projected back onto the set $\sum_k u_k \le T$, so the
+estimated tree never grows taller than `total_time`. Whenever a step produces a
+non-positive time or lowers the log-likelihood it is retried with the learning
+rate divided by five; the learning rate is never restored afterwards, so it can
+only decrease over the course of a run.
+
+The starting point is a perturbation of a flat set of times, rescaled so that
+it already has the right total height.
+
+```{r}
+start <- rep(1, n - 1) + runif(n - 1, min = -0.2, max = 0.2)
+start <- start * tree_height / sum(start)
+start
+```
+
+```{r}
+result <- estimate_coal_times(pairs, d, hap, ict = start,
+                              eta = 0.001, eps = 0.001,
+                              q = q, eigen_q = eigen_q,
+                              states = states, states_matrix = states_matrix,
+                              m = m, t_prob = t_prob,
+                              total_time = tree_height, approx = 1,
+                              max_steps = 1000)
+result$steps
+result$logliks[length(result$logliks)]
+```
+
+Comparing the estimated intercoalescent times with the truth, and the
+coalescent times measured from the present:
+
+```{r}
+data.frame(
+  start = start,
+  true_ict = true_ict,
+  est_ict = result$ict,
+  true_coal_time = cumsum(true_ict),
+  est_coal_time = result$coal_times
+)
+```
+
+`tree_from_pairs()` puts the estimated times back onto the fixed topology, so
+the two trees can be drawn side by side. They differ only in their branch
+lengths.
+
+```{r}
+est_tree <- tree_from_pairs(pairs, result$coal_times)
+est_tree$tip.label <- mytree$tip.label
+```
+
+```{r fig.width = 7, fig.height = 3.5, echo = FALSE}
+op <- par(mfrow = c(1, 2), mar = c(3, 1, 3, 1))
+plot(mytree, main = "true tree", x.lim = c(0, tree_height))
+axisPhylo()
+plot(est_tree, main = "estimated tree", x.lim = c(0, tree_height))
+axisPhylo()
+par(op)
+```

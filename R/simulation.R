@@ -827,6 +827,8 @@ decompose_branches <- function(pairs) {
 #'   \item{\code{q}}{An \eqn{A \times (2n - 1)} matrix of backward
 #' probabilities.}
 #' }
+#'
+#' @export
 pq_vectors <- function(
   d,
   hap,
@@ -1155,30 +1157,30 @@ possible_parents_fa <- function(child, states, states_matrix, t_prob, m) {
       # This could be a matrix, if there is more than one
       # possible parent due to masking mutations
       parent <- state
-      s <- 1
-      while (s < s + 1) {
-        if (lumped_child[s] == state[s]) {
+      i <- 1
+      while (i < s + 1) {
+        if (lumped_child[i] == state[i]) {
           # already more possibilities from a previous overlap
           if (!is.null(nrow(parent))) {
-            parent[, s] <- rep(child[s], nrow(parent))
+            parent[, i] <- rep(child[i], nrow(parent))
           } else {
-            parent[s] <- child[s]
+            parent[i] <- child[i]
           }
-          news <- s + 1
+          next_i <- i + 1
         } else {
-          if (lumped_child[s] == 1) {
-            news <- s + 1
+          if (lumped_child[i] == 1) {
+            next_i <- i + 1
           } else {
             # child has a new overlap mutation
             # This case is if the parent has a mutation which vanished in the
             # child due to an overlapping mutation. We will generate all
             # possible mutations, using M
-            endstate <- max(which(lumped_child == lumped_child[s]))
-            news <- endstate + 1
-            if (sum(state[s:endstate]) > 0) { # indicating an overlap
+            endstate <- max(which(lumped_child == lumped_child[i]))
+            next_i <- endstate + 1
+            if (sum(state[i:endstate]) > 0) { # indicating an overlap
 
               temp_parent <- rep(0, s)
-              temp_parent[s:endstate] <- state[s:endstate]
+              temp_parent[i:endstate] <- state[i:endstate]
               possible_masked <- all_allele_states(temp_parent, m)
 
               # already more possibilities from a previous overlap
@@ -1187,7 +1189,7 @@ possible_parents_fa <- function(child, states, states_matrix, t_prob, m) {
                 for (r in seq_len(nrow(parent))) {
                   for (k in seq_len(nrow(possible_masked))) {
                     new_parent <- parent[r, ]
-                    new_parent[s:endstate] <- possible_masked[k, s:endstate]
+                    new_parent[i:endstate] <- possible_masked[k, i:endstate]
                     results <- c(results, new_parent)
                   }
                 }
@@ -1199,7 +1201,7 @@ possible_parents_fa <- function(child, states, states_matrix, t_prob, m) {
                 results <- c()
                 for (r in seq_len(nrow(possible_masked))) {
                   new_parent <- parent
-                  new_parent[s:endstate] <- possible_masked[r, s:endstate]
+                  new_parent[i:endstate] <- possible_masked[r, i:endstate]
                   results <- c(results, new_parent)
                 }
                 parent <- matrix(results,
@@ -1210,7 +1212,7 @@ possible_parents_fa <- function(child, states, states_matrix, t_prob, m) {
             }
           }
         }
-        s <- news
+        i <- next_i
       }
 
       if (!is.null(nrow(parent))) { # more than one option
@@ -1286,19 +1288,19 @@ possible_parents_approximate <- function(
       # This could be a matrix, if there is more than one
       # possible parent due to masking mutations
       parent <- state
-      s <- 1
-      while (s < s + 1) {
-        if (lumped_child[s] == state[s]) {
+      i <- 1
+      while (i < s + 1) {
+        if (lumped_child[i] == state[i]) {
           # already more possibilities from a previous overlap
           if (!is.null(nrow(parent))) {
-            parent[, s] <- rep(child[s], nrow(parent))
+            parent[, i] <- rep(child[i], nrow(parent))
           } else {
-            parent[s] <- child[s]
+            parent[i] <- child[i]
           }
-          news <- s + 1
+          next_i <- i + 1
         } else {
-          if (lumped_child[s] == 1) {
-            news <- s + 1
+          if (lumped_child[i] == 1) {
+            next_i <- i + 1
           } else { # child has a new overlap mutation
             # This case is if the parent has a mutation which vanished in the
             # child due to an overlapping mutation. We will generate all
@@ -1310,12 +1312,12 @@ possible_parents_approximate <- function(
             # ignoring the possibility (which seems more likely). That the WC
             # are different alleles ... could modify this later to treat all WC
             # as unique
-            endstate <- max(which(lumped_child == lumped_child[s]))
-            news <- endstate + 1
-            if (sum(state[s:endstate]) > 0) { # indicating an overlap
+            endstate <- max(which(lumped_child == lumped_child[i]))
+            next_i <- endstate + 1
+            if (sum(state[i:endstate]) > 0) { # indicating an overlap
 
               temp_parent <- rep(0, s)
-              temp_parent[s:endstate] <- state[s:endstate]
+              temp_parent[i:endstate] <- state[i:endstate]
               possible_masked <- all_allele_states_leaves(temp_parent, leaves)
 
               # already more possibilities from a previous overlap
@@ -1324,7 +1326,7 @@ possible_parents_approximate <- function(
                 for (r in seq_len(nrow(parent))) {
                   for (k in seq_len(nrow(possible_masked))) {
                     new_parent <- parent[r, ]
-                    new_parent[s:endstate] <- possible_masked[k, s:endstate]
+                    new_parent[i:endstate] <- possible_masked[k, i:endstate]
                     results <- c(results, new_parent)
                   }
                 }
@@ -1336,7 +1338,7 @@ possible_parents_approximate <- function(
                 results <- c()
                 for (r in seq_len(nrow(possible_masked))) {
                   new_parent <- parent
-                  new_parent[s:endstate] <- possible_masked[r, s:endstate]
+                  new_parent[i:endstate] <- possible_masked[r, i:endstate]
                   results <- c(results, new_parent)
                 }
                 parent <- matrix(results,
@@ -1347,7 +1349,7 @@ possible_parents_approximate <- function(
             }
           }
         }
-        s <- news
+        i <- next_i
       }
 
       if (!is.null(nrow(parent))) { # more than one option
@@ -1474,42 +1476,42 @@ all_allele_states <- function(m_state, m) {
   s <- length(m_state)
 
   alleles <- c()
-  s <- 1
-  while (s < s + 1) {
-    if (m_state[s] == 0) {
+  i <- 1
+  while (i < s + 1) {
+    if (m_state[i] == 0) {
       site_possible <- c(0)
-      news <- s + 1
-      end_site <- s
-    } else if (m_state[s] == 1) {
-      site_possible <- site_alleles(s, m[s, s])
-      news <- s + 1
-      end_site <- s
-    } else if (m_state[s] > 1) {
-      end_site <- max(which(m_state == m_state[s]))
-      site_possible <- site_alleles(s * 10 + end_site, m[s, end_site])
-      news <- end_site + 1
+      next_i <- i + 1
+      end_site <- i
+    } else if (m_state[i] == 1) {
+      site_possible <- site_alleles(i, m[i, i])
+      next_i <- i + 1
+      end_site <- i
+    } else if (m_state[i] > 1) {
+      end_site <- max(which(m_state == m_state[i]))
+      site_possible <- site_alleles(i * 10 + end_site, m[i, end_site])
+      next_i <- end_site + 1
     }
 
     p <- length(site_possible)
-    if (s == 1) { # first site
-      new_matrix <- matrix(0, nrow = p, ncol = (news - 1))
+    if (i == 1) { # first site
+      new_matrix <- matrix(0, nrow = p, ncol = (next_i - 1))
       for (j in 1:p) {
-        add_on <- rep(site_possible[j], end_site - s + 1)
+        add_on <- rep(site_possible[j], end_site - i + 1)
         new_matrix[j, ] <- add_on
       }
     } else {
-      new_matrix <- matrix(0, nrow = nrow(alleles) * p, ncol = news - 1)
+      new_matrix <- matrix(0, nrow = nrow(alleles) * p, ncol = next_i - 1)
       for (r in seq_len(nrow(alleles))) {
         row <- alleles[r, ]
         for (j in 1:p) {
-          add_on <- rep(site_possible[j], end_site - s + 1)
+          add_on <- rep(site_possible[j], end_site - i + 1)
           new_state <- c(row, add_on)
           new_matrix[p * (r - 1) + j, ] <- new_state
         }
       }
     }
     alleles <- new_matrix
-    s <- news
+    i <- next_i
   }
   alleles
 }
@@ -1555,14 +1557,14 @@ all_allele_states_leaves <- function(m_state, leaves) {
   s <- length(m_state)
 
   alleles <- c()
-  s <- 1
-  while (s < s + 1) {
-    if (m_state[s] == 0) {
+  i <- 1
+  while (i < s + 1) {
+    if (m_state[i] == 0) {
       site_possible <- c(0)
-      news <- s + 1
-      end_site <- s
-    } else if (m_state[s] == 1) {
-      leaves_site <- leaves[, s]
+      next_i <- i + 1
+      end_site <- i
+    } else if (m_state[i] == 1) {
+      leaves_site <- leaves[, i]
       possible <- c()
       for (j in seq_along(leaves_site)) { # surely a better way to do this
         if (leaves_site[j] != "0") {
@@ -1573,45 +1575,43 @@ all_allele_states_leaves <- function(m_state, leaves) {
           }
         }
       }
-      site_possible <- c(unique(possible), paste(s, "WC", sep = ""))
-      news <- s + 1
-      end_site <- s
-    } else if (m_state[s] > 1) {
-      end_site <- max(which(m_state == m_state[s]))
-      site_possible <- site_alleles(s * 10 + end_site, m_state[s, end_site])
-
+      site_possible <- c(unique(possible), paste(i, "WC", sep = ""))
+      next_i <- i + 1
+      end_site <- i
+    } else if (m_state[i] > 1) {
+      end_site <- max(which(m_state == m_state[i]))
       possible <- c()
       for (j in seq_len(nrow(leaves))) { # surely a better way to do this
         row <- leaves[j, ]
-        if (row[s] == row[end_site] && row[s] != "0") {
-          possible <- c(possible, row[s])
+        if (row[i] == row[end_site] && row[i] != "0") {
+          possible <- c(possible, row[i])
         }
       }
-      m <- 10 * s + end_site
-      site_possible <- c(unique(possible), paste(m, "WC", sep = ""))
-      news <- end_site + 1
+      overlap <- 10 * i + end_site
+      site_possible <- c(unique(possible), paste(overlap, "WC", sep = ""))
+      next_i <- end_site + 1
     }
 
     p <- length(site_possible)
-    if (s == 1) { # first site
-      new_matrix <- matrix(0, nrow = p, ncol = (news - 1))
+    if (i == 1) { # first site
+      new_matrix <- matrix(0, nrow = p, ncol = (next_i - 1))
       for (j in 1:p) {
-        add_on <- rep(site_possible[j], end_site - s + 1)
+        add_on <- rep(site_possible[j], end_site - i + 1)
         new_matrix[j, ] <- add_on
       }
     } else {
-      new_matrix <- matrix(0, nrow = nrow(alleles) * p, ncol = news - 1)
-      for (r in seq_along(alleles)) {
+      new_matrix <- matrix(0, nrow = nrow(alleles) * p, ncol = next_i - 1)
+      for (r in seq_len(nrow(alleles))) {
         row <- alleles[r, ]
         for (j in 1:p) {
-          add_on <- rep(site_possible[j], end_site - s + 1)
+          add_on <- rep(site_possible[j], end_site - i + 1)
           new_state <- c(row, add_on)
           new_matrix[p * (r - 1) + j, ] <- new_state
         }
       }
     }
     alleles <- new_matrix
-    s <- news
+    i <- next_i
   }
   alleles
 }
@@ -1714,38 +1714,38 @@ transition_prob_finite_alleles <- function(
   }
   # still have to check the allele states are consistent and multiply by allele
   # mutation probabilities
-  s <- 1
-  while (s < s + 1) {
+  i <- 1
+  while (i < s + 1) {
     # If mutation states are the same, allele states should be the same
-    if (parent_m[s] == child_m[s]) {
-      if (parent[s] != child[s]) {
+    if (parent_m[i] == child_m[i]) {
+      if (parent[i] != child[i]) {
         return(0)
       }
-      s <- s + 1
+      i <- i + 1
     } else {
       # If parent has inactive site, but child site is active, not possible
       # Actually, we don't need to include this because it should already be
       # checked by the transition probability of the mutation state
 
-      if (child_m[s] == 1) { # a new single mutation at site s
+      if (child_m[i] == 1) { # a new single mutation at site i
         if (is.null(mu)) { # Assume all mutations equally likely
-          prob <- prob * (1 / m[s, s])
+          prob <- prob * (1 / m[i, i])
         } else {
-          mu_site <- mu[[s]][[1]]
-          prob <- prob * mu_site[[child[s]]]
+          mu_site <- mu[[i]][[1]]
+          prob <- prob * mu_site[[child[i]]]
         }
-        s <- s + 1
-      } else { # in this case child_m[s] > 1 means a simultaneous cut
+        i <- i + 1
+      } else { # in this case child_m[i] > 1 means a simultaneous cut
         # the end site of the mutation
-        end_site <- max(which(child_m == child_m[s]))
+        end_site <- max(which(child_m == child_m[i]))
 
         if (is.null(mu)) {
-          prob <- prob * (1 / m[s, end_site])
+          prob <- prob * (1 / m[i, end_site])
         } else {
-          mu_site <- mu[[s]][[end_site - s + 1]]
-          prob <- prob * mu_site[[child[s]]]
+          mu_site <- mu[[i]][[end_site - i + 1]]
+          prob <- prob * mu_site[[child[i]]]
         }
-        s <- end_site + 1
+        i <- end_site + 1
       }
     }
   }
