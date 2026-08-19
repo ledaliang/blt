@@ -2,3 +2,7 @@
 ^\.Rproj\.user$
 ^doc$
 ^Meta$
+^\.Rhistory$
+^\.claude$
+^\.DS_Store$
+^\.github$

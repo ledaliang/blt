@@ -2,23 +2,33 @@ Package: blt
 Type: Package
 Title: Bayesian Lineage Tracing (BLT)
 Version: 0.1.0
-Author: Leda Liang, Mackenzie Simper, Julia Palacios
-Maintainer: Leda Liang <ledal@stanford.edu>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Authors@R: c(
+    person("Leda", "Liang", email = "ledal@stanford.edu",
+           role = c("aut", "cre")),
+    person("Mackenzie", "Simper", role = "aut"),
+    person("Julia", "Palacios", role = "aut"))
+Description: Simulation and inference for CRISPR based lineage tracing under a
+    finite alleles model of editing. Builds the mutation state space and rate
+    matrices for a barcode of adjacent cut sites, simulates allele data along a
+    tree, and evaluates the likelihood and its gradient for a fixed topology.
+    Estimates mutation rates, coalescent times under the bounded coalescent,
+    and searches over tree topologies by simulated annealing.
 License: GPL-3
 Encoding: UTF-8
-Suggests:
+Depends:
+    R (>= 3.5)
+Imports:
     ape,
-    nlme,
-    stringi,
+    expm,
+    hash,
     phangorn,
-    phylodyn,
+    stats,
+    stringi
+Suggests:
     INLA,
     knitr,
+    phylodyn,
     rmarkdown
-Imports:
-    hash,
-    expm
-RoxygenNote: 7.3.3
+Additional_repositories: https://inla.r-inla-download.org/R/stable
 VignetteBuilder: knitr
+Config/roxygen2/version: 8.1.0
