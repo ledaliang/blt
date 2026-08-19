@@ -1,0 +1,184 @@
+---
+title: "BLT: Simulated Annealing over Trees"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BLT: Simulated Annealing over Trees}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+The other vignettes estimate one piece of the problem at a time: the mutation
+rates with the tree given, or the coalescent times with the topology given.
+This vignette runs the whole method, referred to as BLT, which estimates all
+three together. It alternates a simulated annealing search over topologies with
+refits of the rates and of the times.
+
+```{r setup}
+library(blt)
+library(ape)
+```
+
+## The algorithm
+
+`run_blt()` carries out the following steps.
+
+1. A UPGMA tree on the Hamming distances between the lumped mutation states
+   gives the starting topology and the starting intercoalescent times.
+2. The mutation rates are estimated from the observed mutation counts and the
+   total branch length of that tree.
+3. The intercoalescent times are fitted on the starting topology by gradient
+   ascent, for at most `max_steps` steps.
+4. Then for `max_outer_iter` cycles:
+    a. simulated annealing over topologies, `sa_max_iter` proposals, each one
+       scored by `inner_sa_steps` steps of gradient ascent on the times;
+    b. the rates are refitted from the new times;
+    c. the times are refitted on the new topology, for at most
+       `inner_max_steps` steps.
+
+The height of the tree is held at the height of the UPGMA tree throughout,
+because the likelihood on its own cannot separate the overall scale of the tree
+from the overall mutation rate.
+
+## Simulating data
+
+One tree, one integration barcode, four cut sites. As in the other vignettes
+the topology comes from `phylodyn` and the alleles from
+`simulate_data_finite_alleles()`, but here nothing about the tree is passed to
+the estimator: only the alleles at the leaves are observed.
+
+```{r}
+set.seed(1)
+n <- 6 # number of cells
+s <- 4 # number of cut sites
+
+simul1 <- phylodyn::coalsim(samp_times = 0, n_sampled = n, traj = exp_traj,
+                            method = "tt", val_upper = 11)
+true_tree <- phylodyn::generate_newick((simul1))$newick
+true_height <- coalescent.intervals(true_tree)$total.depth
+
+states_matrix <- state_space_matrix(s)
+theta_true <- matrix(0.5, nrow = s, ncol = s)
+q_true <- q_matrix(states_matrix, theta_true)
+m_true <- matrix(20, nrow = s, ncol = s)
+
+d <- simulate_data_finite_alleles(true_tree, q_true, states_matrix,
+                                  m_true)[[2]][1:n, ]
+rownames(d) <- true_tree$tip.label
+d
+```
+
+An entry `"0"` is an uncut site, `"3:10"` is allele 10 of a cut at site 3, and
+`"14:14"` is allele 14 of a single cut spanning sites 1 through 4. Cells 4, 5
+and 6 were each cut across all four sites at once, which wipes out everything
+that came before and leaves them looking unrelated to each other even though
+they need not be.
+
+## Setting up the search
+
+The starting point is the UPGMA tree, which is what the estimator has to
+improve on.
+
+```{r}
+lumped_d <- t(apply(d, 1, lumped_state))
+dist_matrix <- hamming_dist_matrix(lumped_d)
+dimnames(dist_matrix) <- list(rownames(d), rownames(d))
+upgma_tree <- phangorn::upgma(as.dist(dist_matrix))
+matching(upgma_tree)
+```
+
+Topologies are proposed by `adjacent_swap()`, which exchanges a child of one
+coalescent event with a child of the next event back in time. Every proposal is
+one such swap away from the current tree.
+
+```{r}
+set.seed(2)
+adjacent_swap(matching(upgma_tree))
+```
+
+A proposal is accepted with probability 1 if it raises the log-likelihood, and
+otherwise with a probability that falls as the temperature falls, so that early
+proposals explore and later ones do not. Under the default `"exp"` schedule
+`sa_temp_update()` drops the temperature geometrically by `sa_alpha` after every
+proposal.
+
+```{r}
+sa_accept_prob(e1 = -40, e2 = -39, temp = 1) # an improvement
+sa_accept_prob(e1 = -40, e2 = -45, temp = 1) # a big drop, early on
+sa_accept_prob(e1 = -40, e2 = -45, temp = 0.1) # the same drop, later on
+```
+
+The mutation rates are refitted from the observed counts and the current times
+by `refit_theta()`, using the posterior mean of the Dirichlet-Poisson model in
+the *Initial Estimate of Theta* vignette. Because a coalescent tree always has
+$n, n-1, \ldots, 2$ lineages in its successive intervals, the total branch
+length depends on the times but not on the topology.
+
+```{r}
+c_vec <- flatten_upper(observed_mutations(d, s, lumped_d)$obsM)
+init_ict <- coalescent.intervals(upgma_tree)$interval.length
+refit_theta(c_vec, init_ict, time_obs = true_height,
+            alpha_prior = rep(5, s * (s + 1) / 2))$lambda
+```
+
+## Running BLT
+
+The settings below are the ones used for sa_v1: an initial gradient ascent of
+at most 200 steps, then two cycles, each with 30 simulated annealing proposals
+scored by 20 gradient steps apiece, followed by 100 steps to refit the times.
+They are also the defaults of `run_blt()`. This takes several minutes.
+
+```{r}
+result <- run_blt(d, s = s, time = true_height,
+                  eta = 1e-3, eps = 1e-3,
+                  max_steps = 200,
+                  max_outer_iter = 2,
+                  sa_max_iter = 30,
+                  inner_sa_steps = 20,
+                  inner_max_steps = 100,
+                  sa_init_temp = 1, sa_alpha = 0.95, sa_schedule = "exp",
+                  verbose = TRUE)
+```
+
+## Results
+
+The log-likelihood after the initial fit and after each cycle:
+
+```{r}
+result$loglik_trace
+result$n_accept
+```
+
+The search moves the topology towards the truth. Robinson-Foulds distance to
+the tree the data was simulated on, for the UPGMA starting point and for the
+BLT estimate:
+
+```{r}
+c(upgma = phangorn::RF.dist(result$upgma_tree, true_tree),
+  blt = phangorn::RF.dist(result$tree, true_tree))
+```
+
+```{r fig.width = 7, fig.height = 3.2, echo = FALSE}
+op <- par(mfrow = c(1, 3), mar = c(2, 1, 3, 1))
+plot(true_tree, main = "true tree")
+plot(result$upgma_tree, main = "UPGMA (start)")
+plot(result$tree, main = "BLT")
+par(op)
+```
+
+Finally the estimated relative mutation rates, against the ones the data was
+simulated under. `run_blt()` reports `theta` on an absolute scale, with the
+overall rate `lambda` folded in, so both are scaled to sum to one.
+
+```{r}
+est <- flatten_upper(result$theta)
+truth <- flatten_upper(theta_true)
+round(data.frame(true = truth / sum(truth), estimated = est / sum(est)), 4)
+result$lambda
+```
